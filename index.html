@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Analisis Smartlink</title>
+    <title>ADMIN PAYMENT</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>♾️</text></svg>">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root {
@@ -28,7 +29,8 @@
         textarea { width: 100%; height: 120px; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-family: monospace; font-size: 0.9rem; resize: vertical; }
         textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
 
-        .settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 10px; background: #f1f5f9; padding: 15px; border-radius: 8px; }
+        /* Grid untuk Pengaturan */
+        .settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 10px; background: #f1f5f9; padding: 15px; border-radius: 8px; }
         .cloud-grid { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: end; }
         @media (max-width: 600px) { .cloud-grid { grid-template-columns: 1fr; } }
         .form-control { display: flex; flex-direction: column; gap: 5px; }
@@ -65,6 +67,17 @@
         td.text-right, th.text-right { text-align: right; }
         tr:hover { background: #f8fafc; }
 
+        /* Link Table Style */
+        .clickable-id {
+            color: var(--primary);
+            font-weight: bold;
+            text-decoration: underline;
+            text-decoration-style: dotted;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .clickable-id:hover { color: var(--primary-dark); }
+
         .hidden { display: none; }
         .error-msg { color: var(--danger); font-size: 0.9rem; margin-top: 8px; display: none; }
         .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600; }
@@ -95,10 +108,40 @@
         .btn-copy:hover { background: #166534; }
 
         .bin-info { font-size: 0.78rem; color: var(--text-sub); margin-top: 4px; font-family: monospace; }
-
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
 
-        #toast { visibility: hidden; min-width: 250px; background: #1e293b; color: #fff; text-align: center; border-radius: 8px; padding: 14px 20px; position: fixed; z-index: 9999; left: 50%; bottom: 30px; transform: translateX(-50%); opacity: 0; transition: opacity 0.3s, bottom 0.3s; font-size: 0.9rem; }
+        /* MODAL STYLES */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px);
+            z-index: 1000; display: flex; justify-content: center; align-items: center;
+            opacity: 0; visibility: hidden; transition: all 0.3s;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        
+        .modal-box {
+            background: white; width: 90%; max-width: 600px; max-height: 85vh;
+            border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+            display: flex; flex-direction: column; transform: scale(0.95); transition: transform 0.3s;
+        }
+        .modal-overlay.active .modal-box { transform: scale(1); }
+
+        .modal-header {
+            padding: 20px; border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .modal-header h3 { font-size: 1.2rem; color: var(--text-main); }
+        .modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-sub); padding: 0; }
+        .modal-close:hover { color: var(--danger); }
+
+        .modal-body { padding: 0; overflow-y: auto; flex: 1; }
+        .modal-body table { margin-top: 0; }
+        .modal-body thead { background: #f8fafc; position: sticky; top: 0; }
+        
+        .flag-img { width: 24px; height: 16px; object-fit: cover; border-radius: 2px; box-shadow: 0 0 1px rgba(0,0,0,0.3); vertical-align: middle; margin-right: 8px; }
+        .country-cell { display: flex; align-items: center; }
+
+        #toast { visibility: hidden; min-width: 250px; background: #1e293b; color: #fff; text-align: center; border-radius: 8px; padding: 14px 20px; position: fixed; z-index: 2000; left: 50%; bottom: 30px; transform: translateX(-50%); opacity: 0; transition: opacity 0.3s, bottom 0.3s; font-size: 0.9rem; }
         #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
 
         .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.4); border-radius: 50%; border-top-color: white; animation: spin 0.8s linear infinite; }
@@ -113,21 +156,21 @@
 <body>
 <div class="container">
     <header>
-        <h1>Dashboard Analisis Smartlink</h1>
-        <p>Konversi USD &rarr; IDR (Gross) &rarr; Potong Admin &rarr; IDR (Net) &bull; Cloud sync via JSONBin.io</p>
+        <h1>ADMIN PAYMENT <span style="font-size:0.6em; color:var(--cloud); vertical-align:middle;"></span></h1>
+        <p>Konversi USD &rarr; IDR &bull; Breakdown Negara &bull; Cloud Sync</p>
     </header>
 
     <!-- KONFIGURASI JSONBIN -->
     <section class="card card-cloud">
         <h3>
-            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/></svg>
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4 0 003 15z"/></svg>
             Konfigurasi JSONBin.io
         </h3>
         <div class="cloud-grid">
             <div class="form-control">
                 <label for="binMasterKey">Master Key ($2a$...)</label>
                 <input type="password" id="binMasterKey" placeholder="$2a$10$..." oninput="clearCloudStatus()">
-                <div class="bin-info">Dapatkan di jsonbin.io &rarr; API Keys &rarr; Master Key</div>
+                <div class="bin-info">Dapatkan di jsonbin.io &rarr; API Keys</div>
             </div>
             <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end; padding-bottom:2px;">
                 <button class="btn-load" onclick="loadFromCloud()" id="btnLoad">
@@ -141,15 +184,13 @@
             </div>
         </div>
 
-        <!-- Bin ID result — muncul setelah simpan pertama atau ada di localStorage -->
         <div class="bin-result" id="binResult">
-            <label>Bin ID aktif (copy ke halaman user jika perlu):</label>
+            <label>Bin ID aktif:</label>
             <div class="bin-result-row">
                 <input type="text" id="binIdDisplay" readonly>
                 <button class="btn-copy" onclick="copyBinId()">Copy</button>
             </div>
         </div>
-
         <div id="cloudStatus" class="cloud-status hidden"></div>
     </section>
 
@@ -159,16 +200,26 @@
             <div class="settings-grid">
                 <div class="form-control">
                     <label for="usdRate">Rate USD ke IDR</label>
-                    <input type="number" id="usdRate" placeholder="Contoh: 16500" oninput="recalculateAll()">
+                    <input type="number" id="usdRate" placeholder="16500" oninput="recalculateAll()">
                 </div>
                 <div class="form-control">
                     <label for="adminFee">Biaya Admin (%)</label>
-                    <input type="number" id="adminFee" placeholder="Contoh: 4" value="4" oninput="recalculateAll()">
+                    <input type="number" id="adminFee" placeholder="4" value="4" oninput="recalculateAll()">
+                </div>
+                <!-- PENGATURAN KOLOM -->
+                <div class="form-control">
+                    <label for="colCountry">Index Kolom Negara</label>
+                    <input type="number" id="colCountry" value="1" min="0" title="Mulai dari 0 (Col 1, Col 2, dst)">
+                    <div class="bin-info">Contoh: 0 jika negara di kolom pertama</div>
+                </div>
+                <div class="form-control">
+                    <label for="colLink">Index Kolom Smartlink ID</label>
+                    <input type="number" id="colLink" value="3" min="0" title="Mulai dari 0">
                 </div>
             </div>
             <div style="margin-top:15px;">
-                <label for="rawData">Input Data (Copy Paste atau Upload Excel)</label>
-                <textarea id="rawData" placeholder="Paste data Excel di sini..."></textarea>
+                <label for="rawData">Input Data (Excel / Text)</label>
+                <textarea id="rawData" placeholder="Paste data Excel di sini... Format: Date | Country | IP | SmartlinkID | Payout"></textarea>
                 <div style="margin-top:5px;font-size:0.9rem;color:var(--text-sub);">Atau upload file .xlsx / .xls:</div>
                 <input type="file" id="fileInput" accept=".xlsx,.xls" onchange="handleFileUpload(this)">
             </div>
@@ -179,7 +230,7 @@
                     Proses Data
                 </button>
                 <button class="btn-cloud" onclick="saveToCloud()" id="btnSave" disabled>
-                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/></svg>
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4 0 003 15z"/></svg>
                     Simpan ke Cloud
                 </button>
                 <button class="btn-secondary" onclick="clearData()">
@@ -197,7 +248,7 @@
     <!-- SUMMARY -->
     <section id="summarySection" class="summary-grid hidden">
         <div class="stat-card">
-            <div class="stat-label">Total IDR (Net After Admin)</div>
+            <div class="stat-label">Total IDR (Net)</div>
             <div class="stat-value money" id="totalRevenue">Rp 0</div>
         </div>
         <div class="stat-card">
@@ -205,7 +256,7 @@
             <div class="stat-value" id="totalLeads">0</div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">Total Smartlink ID</div>
+            <div class="stat-label">Total Smartlink</div>
             <div class="stat-value" id="uniqueSmartlinks">0</div>
         </div>
         <div class="stat-card">
@@ -227,27 +278,105 @@
             <table>
                 <thead>
                     <tr>
-                        <th>No</th>
+                        <th style="width: 50px;">No</th>
                         <th>Smartlink ID</th>
                         <th style="text-align:center;">Jumlah<br>Lead</th>
                         <th class="text-right">Payout<br>(USD)</th>
-                        <th class="text-right">Konversi ke Rupiah<br>(Sebelum Potong)</th>
                         <th class="text-right">Potongan<br>(Admin)</th>
-                        <th class="text-right">Total Rupiah<br>(Setelah Potong)</th>
+                        <th class="text-right">Total Rupiah<br>(Net)</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody"></tbody>
             </table>
         </div>
         <div style="margin-top:15px;font-size:0.85rem;color:var(--text-sub);text-align:right;">
-            Alur: USD Asli &times; Rate = Gross IDR &minus; Admin % = Net IDR
+            Klik ID Smartlink untuk melihat detail negara.
         </div>
     </section>
+</div>
+
+<!-- MODAL DETAIL NEGARA -->
+<div id="countryModal" class="modal-overlay" onclick="closeModal(event)">
+    <div class="modal-box" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <h3>Detail LEADS: <span id="modalSmartlinkId" style="color:var(--primary);"></span></h3>
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="table-container" style="border:none;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Negara</th>
+                            <th style="text-align:center;">Leads</th>
+                            <th style="text-align:right;">USD$</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modalTableBody">
+                        <!-- Rows inserted by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div id="toast"></div>
 
 <script>
+    // ── KONFIGURASI NEGARA ────────────────────────────────────────────────────────
+    const COUNTRY_MAP = {
+        "AF": "Afghanistan", "AX": "Åland Islands", "AL": "Albania", "DZ": "Algeria", "AS": "American Samoa",
+        "AD": "Andorra", "AO": "Angola", "AI": "Anguilla", "AQ": "Antarctica", "AG": "Antigua and Barbuda",
+        "AR": "Argentina", "AM": "Armenia", "AW": "Aruba", "AU": "Australia", "AT": "Austria",
+        "AZ": "Azerbaijan", "BS": "Bahamas", "BH": "Bahrain", "BD": "Bangladesh", "BB": "Barbados",
+        "BY": "Belarus", "BE": "Belgium", "BZ": "Belize", "BJ": "Benin", "BM": "Bermuda", "BT": "Bhutan",
+        "BO": "Bolivia", "BA": "Bosnia and Herzegovina", "BW": "Botswana", "BV": "Bouvet Island",
+        "BR": "Brazil", "IO": "British Indian Ocean Territory", "BN": "Brunei", "BG": "Bulgaria",
+        "BF": "Burkina Faso", "BI": "Burundi", "KH": "Cambodia", "CM": "Cameroon", "CA": "Canada",
+        "CV": "Cape Verde", "KY": "Cayman Islands", "CF": "Central African Republic", "TD": "Chad",
+        "CL": "Chile", "CN": "China", "CX": "Christmas Island", "CC": "Cocos (Keeling) Islands",
+        "CO": "Colombia", "KM": "Comoros", "CG": "Congo", "CD": "Congo (DRC)", "CK": "Cook Islands",
+        "CR": "Costa Rica", "CI": "Côte d'Ivoire", "HR": "Croatia", "CU": "Cuba", "CY": "Cyprus",
+        "CZ": "Czech Republic", "DK": "Denmark", "DJ": "Djibouti", "DM": "Dominica", "DO": "Dominican Republic",
+        "EC": "Ecuador", "EG": "Egypt", "SV": "El Salvador", "GQ": "Equatorial Guinea", "ER": "Eritrea",
+        "EE": "Estonia", "ET": "Ethiopia", "FK": "Falkland Islands", "FO": "Faroe Islands", "FJ": "Fiji",
+        "FI": "Finland", "FR": "France", "GF": "French Guiana", "PF": "French Polynesia", "TF": "French Southern Territories",
+        "GA": "Gabon", "GM": "Gambia", "GE": "Georgia", "DE": "Germany", "GH": "Ghana", "GI": "Gibraltar",
+        "GR": "Greece", "GL": "Greenland", "GD": "Grenada", "GP": "Guadeloupe", "GU": "Guam", "GT": "Guatemala",
+        "GG": "Guernsey", "GN": "Guinea", "GW": "Guinea-Bissau", "GY": "Guyana", "HT": "Haiti",
+        "HM": "Heard Island and McDonald Islands", "VA": "Holy See", "HN": "Honduras", "HK": "Hong Kong",
+        "HU": "Hungary", "IS": "Iceland", "IN": "India", "ID": "Indonesia", "IR": "Iran", "IQ": "Iraq",
+        "IE": "Ireland", "IM": "Isle of Man", "IL": "Israel", "IT": "Italy", "JM": "Jamaica", "JP": "Japan",
+        "JE": "Jersey", "JO": "Jordan", "KZ": "Kazakhstan", "KE": "Kenya", "KI": "Kiribati", "KP": "North Korea",
+        "KR": "South Korea", "KW": "Kuwait", "KG": "Kyrgyzstan", "LA": "Laos", "LV": "Latvia", "LB": "Lebanon",
+        "LS": "Lesotho", "LR": "Liberia", "LY": "Libya", "LI": "Liechtenstein", "LT": "Lithuania", "LU": "Luxembourg",
+        "MO": "Macao", "MK": "North Macedonia", "MG": "Madagascar", "MW": "Malawi", "MY": "Malaysia",
+        "MV": "Maldives", "ML": "Mali", "MT": "Malta", "MH": "Marshall Islands", "MQ": "Martinique",
+        "MR": "Mauritania", "MU": "Mauritius", "YT": "Mayotte", "MX": "Mexico", "FM": "Micronesia",
+        "MD": "Moldova", "MC": "Monaco", "MN": "Mongolia", "ME": "Montenegro", "MS": "Montserrat",
+        "MA": "Morocco", "MZ": "Mozambique", "MM": "Myanmar", "NA": "Namibia", "NR": "Nauru", "NP": "Nepal",
+        "NL": "Netherlands", "NC": "New Caledonia", "NZ": "New Zealand", "NI": "Nicaragua", "NE": "Niger",
+        "NG": "Nigeria", "NU": "Niue", "NF": "Norfolk Island", "MP": "Northern Mariana Islands",
+        "NO": "Norway", "OM": "Oman", "PK": "Pakistan", "PW": "Palau", "PS": "Palestine", "PA": "Panama",
+        "PG": "Papua New Guinea", "PY": "Paraguay", "PE": "Peru", "PH": "Philippines", "PN": "Pitcairn",
+        "PL": "Poland", "PT": "Portugal", "PR": "Puerto Rico", "QA": "Qatar", "RE": "Réunion", "RO": "Romania",
+        "RU": "Russia", "RW": "Rwanda", "BL": "Saint Barthélemy", "SH": "Saint Helena", "KN": "Saint Kitts and Nevis",
+        "LC": "Saint Lucia", "MF": "Saint Martin", "PM": "Saint Pierre and Miquelon", "VC": "Saint Vincent and the Grenadines",
+        "WS": "Samoa", "SM": "San Marino", "ST": "São Tomé and Príncipe", "SA": "Saudi Arabia", "SN": "Senegal",
+        "RS": "Serbia", "SC": "Seychelles", "SL": "Sierra Leone", "SG": "Singapore", "SX": "Sint Maarten",
+        "SK": "Slovakia", "SI": "Slovenia", "SB": "Solomon Islands", "SO": "Somalia", "ZA": "South Africa",
+        "GS": "South Georgia and the South Sandwich Islands", "SS": "South Sudan", "ES": "Spain", "LK": "Sri Lanka",
+        "SD": "Sudan", "SR": "Suriname", "SJ": "Svalbard and Jan Mayen", "SZ": "Eswatini", "SE": "Sweden",
+        "CH": "Switzerland", "SY": "Syria", "TW": "Taiwan", "TJ": "Tajikistan", "TZ": "Tanzania", "TH": "Thailand",
+        "TL": "Timor-Leste", "TG": "Togo", "TK": "Tokelau", "TO": "Tonga", "TT": "Trinidad and Tobago",
+        "TN": "Tunisia", "TR": "Turkey", "TM": "Turkmenistan", "TC": "Turks and Caicos Islands", "TV": "Tuvalu",
+        "UG": "Uganda", "UA": "Ukraine", "AE": "United Arab Emirates", "GB": "United Kingdom", "US": "United States",
+        "UM": "U.S. Minor Outlying Islands", "UY": "Uruguay", "UZ": "Uzbekistan", "VU": "Vanuatu",
+        "VE": "Venezuela", "VN": "Vietnam", "VG": "British Virgin Islands", "VI": "U.S. Virgin Islands",
+        "WF": "Wallis and Futuna", "EH": "Western Sahara", "YE": "Yemen", "ZM": "Zambia", "ZW": "Zimbabwe"
+    };
+
     const JSONBIN_BASE = 'https://api.jsonbin.io/v3';
     let rawDataArray = [], processedData = [];
 
@@ -256,7 +385,7 @@
         idr: v => new Intl.NumberFormat('id-ID', {style:'currency',currency:'IDR',maximumFractionDigits:0}).format(v)
     };
 
-    // ── INIT: load config dari localStorage ──────────────────────────────
+    // ── INIT ────────────────────────────────────────────────────────────────────────
     window.addEventListener('load', () => {
         const savedKey = localStorage.getItem('jb_master_key');
         const savedBin = localStorage.getItem('jb_bin_id');
@@ -287,7 +416,7 @@
         });
     }
 
-    // ── STATUS ────────────────────────────────────────────────────────────
+    // ── STATUS CLOUD ────────────────────────────────────────────────────────────────
     function setCloudStatus(type, msg) {
         const el = document.getElementById('cloudStatus');
         el.className = `cloud-status ${type}`;
@@ -298,7 +427,7 @@
         document.getElementById('cloudStatus').className = 'cloud-status hidden';
     }
 
-    // ── JSONBIN API ───────────────────────────────────────────────────────
+    // ── API JSONBIN ────────────────────────────────────────────────────────────────
     async function apiBin(method, path, body) {
         const key = getMasterKey();
         if (!key) throw new Error('Master Key belum diisi.');
@@ -313,7 +442,7 @@
         return json;
     }
 
-    // ── SIMPAN KE CLOUD ───────────────────────────────────────────────────
+    // ── SIMPAN CLOUD ────────────────────────────────────────────────────────────────
     async function saveToCloud() {
         if (!getMasterKey()) { showToast('Isi Master Key JSONBin terlebih dahulu.'); return; }
         if (!processedData.length) { showToast('Tidak ada data untuk disimpan.'); return; }
@@ -327,35 +456,28 @@
             savedAt: new Date().toISOString(),
             rate: parseFloat(document.getElementById('usdRate').value) || 0,
             adminPercent: parseFloat(document.getElementById('adminFee').value) || 0,
-            rows: processedData.map(d => ({
-                id: d.id, count: d.count, totalPayoutUSD: d.totalPayoutUSD,
-                grossIDR: d.grossIDR, adminIDR: d.adminIDR,
-                finalNetIDR: d.finalNetIDR, adminPercent: d.adminPercent
-            }))
+            rows: processedData
         };
 
         try {
             let binId = getSavedBinId();
             if (binId) {
-                // Coba update bin yang sudah ada
                 try {
                     await apiBin('PUT', `/b/${binId}`, payload);
                 } catch (e) {
-                    // Bin tidak ditemukan — buat baru
-                    if (e.message.includes('not found') || e.message.includes('Not Found') || e.message.includes('Bin')) {
+                    if (e.message.includes('not found') || e.message.includes('Bin')) {
                         const created = await apiBin('POST', '/b', payload, true);
                         binId = created.metadata.id;
                         localStorage.setItem('jb_bin_id', binId);
                     } else throw e;
                 }
             } else {
-                // Belum ada Bin ID — buat baru
                 const res = await fetch(`${JSONBIN_BASE}/b`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-Master-Key': getMasterKey(),
-                        'X-Bin-Name': 'smartlink-dashboard',
+                        'X-Bin-Name': 'smartlink-dashboard-v2',
                         'X-Bin-Private': 'true'
                     },
                     body: JSON.stringify(payload)
@@ -367,27 +489,27 @@
 
             saveConfig(binId);
             showBinId(binId);
-            setCloudStatus('ok', `Berhasil disimpan — Bin: ${binId} — ${new Date().toLocaleString('id-ID')}`);
+            setCloudStatus('ok', `Berhasil disimpan — ${new Date().toLocaleString('id-ID')}`);
             document.getElementById('cloudSyncLabel').textContent = 'Tersimpan di cloud';
             document.getElementById('cloudSyncLabel').style.color = 'var(--success)';
             document.getElementById('lastSyncInfo').textContent = `Sync: ${new Date().toLocaleString('id-ID')}`;
-            showToast('Data berhasil disimpan ke JSONBin!');
+            showToast('Data berhasil disimpan!');
         } catch (err) {
             setCloudStatus('err', 'Gagal simpan: ' + err.message);
             showToast('Gagal menyimpan: ' + err.message);
         } finally {
             btn.disabled = false;
-            btn.innerHTML = '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/></svg> Simpan ke Cloud';
+            btn.innerHTML = '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4 0 003 15z"/></svg> Simpan ke Cloud';
         }
     }
 
-    // ── MUAT DARI CLOUD ───────────────────────────────────────────────────
+    // ── MUAT CLOUD ───────────────────────────────────────────────────────────────────
     async function loadFromCloud() {
         const binId = getSavedBinId();
         if (!getMasterKey()) { showToast('Isi Master Key terlebih dahulu.'); return; }
-        if (!binId) { showToast('Belum ada Bin ID. Simpan data dulu minimal sekali.'); return; }
+        if (!binId) { showToast('Belum ada Bin ID. Simpan data dulu.'); return; }
 
-        setCloudStatus('loading', 'Memuat data dari cloud...');
+        setCloudStatus('loading', 'Memuat data...');
         const btn = document.getElementById('btnLoad');
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner" style="border-color:rgba(124,58,237,0.4);border-top-color:#7c3aed;"></span> Memuat...';
@@ -395,31 +517,36 @@
         try {
             const result = await apiBin('GET', `/b/${binId}/latest`);
             const data = result.record ?? result;
-            if (!data || !Array.isArray(data.rows) || !data.rows.length) throw new Error('Bin kosong atau format tidak dikenali.');
+            if (!data || !Array.isArray(data.rows)) throw new Error('Format data tidak valid.');
 
+            // Restore Settings
             if (data.rate) document.getElementById('usdRate').value = data.rate;
             if (data.adminPercent) document.getElementById('adminFee').value = data.adminPercent;
 
-            rawDataArray = data.rows.map(r => ({ id: r.id, count: r.count, totalPayoutUSD: r.totalPayoutUSD }));
-            processedData = data.rows.map(r => ({...r}));
+            // Restore Data
+            processedData = data.rows; // Assuming rows already have correct structure
             processedData.sort((a,b) => b.finalNetIDR - a.finalNetIDR);
 
             let totalNet = 0, totalLeads = 0;
-            processedData.forEach(r => { totalNet += r.finalNetIDR; totalLeads += r.count; });
+            processedData.forEach(r => { 
+                totalNet += (r.finalNetIDR || 0); 
+                totalLeads += (r.count || 0);
+            });
 
             renderTable();
             updateSummary(totalNet, totalLeads, processedData.length);
+            
             document.getElementById('summarySection').classList.remove('hidden');
             document.getElementById('resultSection').classList.remove('hidden');
             document.getElementById('btnExport').disabled = false;
             document.getElementById('btnSave').disabled = false;
 
             const savedAt = data.savedAt ? new Date(data.savedAt).toLocaleString('id-ID') : '-';
-            setCloudStatus('ok', `Data dimuat — terakhir disimpan: ${savedAt}`);
+            setCloudStatus('ok', `Data dimuat (${savedAt})`);
             document.getElementById('cloudSyncLabel').textContent = 'Dimuat dari cloud';
             document.getElementById('cloudSyncLabel').style.color = 'var(--cloud)';
             document.getElementById('lastSyncInfo').textContent = `Terakhir disimpan: ${savedAt}`;
-            showToast('Data berhasil dimuat dari cloud!');
+            showToast('Data berhasil dimuat!');
         } catch (err) {
             setCloudStatus('err', 'Gagal muat: ' + err.message);
             showToast('Gagal memuat: ' + err.message);
@@ -429,23 +556,17 @@
         }
     }
 
-    // ── RESET BIN ────────────────────────────────────────────────────────
     async function clearCloudData() {
         const binId = getSavedBinId();
-        if (!getMasterKey()) { showToast('Master Key harus diisi.'); return; }
-        if (!binId) { showToast('Belum ada Bin ID tersimpan.'); return; }
-        if (!confirm('Yakin ingin mereset isi bin ke kosong?')) return;
-        setCloudStatus('loading', 'Mereset bin...');
+        if (!getMasterKey() || !binId) return;
+        if (!confirm('Hapus semua data di cloud?')) return;
+        setCloudStatus('loading', 'Mereset...');
         try {
             await apiBin('PUT', `/b/${binId}`, { savedAt: new Date().toISOString(), rows: [] });
-            setCloudStatus('ok', 'Bin berhasil direset.');
-            showToast('Bin berhasil dikosongkan.');
-        } catch (err) {
-            setCloudStatus('err', 'Gagal reset: ' + err.message);
-        }
+            setCloudStatus('ok', 'Bin kosong.');
+        } catch (err) { setCloudStatus('err', err.message); }
     }
 
-    // ── UPLOAD EXCEL ─────────────────────────────────────────────────────
     function handleFileUpload(input) {
         const file = input.files[0];
         if (!file) return;
@@ -455,12 +576,11 @@
             const ws = wb.Sheets[wb.SheetNames[0]];
             const json = XLSX.utils.sheet_to_json(ws, {header:1});
             document.getElementById('rawData').value = json.map(r => r.join('\t')).join('\n');
-            showToast('File Excel berhasil dimuat!');
+            showToast('File Excel dimuat!');
         };
         reader.readAsArrayBuffer(file);
     }
 
-    // ── PARSE PAYOUT ─────────────────────────────────────────────────────
     function parsePayout(raw) {
         let s = raw.replace(/[^0-9.,-]/g, '');
         if (!s) return 0;
@@ -471,63 +591,109 @@
         return parseFloat(s)||0;
     }
 
-    // ── PROSES DATA ───────────────────────────────────────────────────────
+    // ── PROSES DATA (Dengan Negara) ──────────────────────────────────────────────────
     function processData() {
         const input = document.getElementById('rawData').value;
         const errorMsg = document.getElementById('errorMsg');
-        if (!input.trim()) { showToast('Masukkan data terlebih dahulu.'); return; }
+        if (!input.trim()) { showToast('Masukkan data.'); return; }
+
+        // Ambil Index Kolom dari Input
+        const countryColIdx = parseInt(document.getElementById('colCountry').value) || 1;
+        const linkColIdx = parseInt(document.getElementById('colLink').value) || 3;
+
         const lines = input.trim().split('\n');
         const grouped = {};
+
         try {
-            lines.forEach(line => {
+            lines.forEach((line, idx) => {
                 if (!line.trim()) return;
                 let cols = line.split('\t');
                 if (cols.length === 1) cols = line.trim().split(/\s{2,}/);
-                if (cols.length < 3) return;
+                
+                if (cols.length < 2) return; // Skip barir kosong/tdk jelas
+
+                // Deteksi Payout (Cari kolom dengan simbol mata uang)
                 let payoutIdx = -1;
-                cols.forEach((c,i) => { if (payoutIdx===-1 && (c.includes('$')||c.toUpperCase().includes('USD')||c.toUpperCase().includes('EUR'))) payoutIdx=i; });
-                if (payoutIdx === -1) payoutIdx = cols.length - 1;
-                const id = cols[3] || cols[4] || 'Unknown';
+                cols.forEach((c, i) => { 
+                    if (payoutIdx===-1 && (c.includes('$')||c.toUpperCase().includes('USD')||c.toUpperCase().includes('EUR'))) payoutIdx=i; 
+                });
+                if (payoutIdx === -1) payoutIdx = cols.length - 1; // Fallback ke kolom terakhir
+
+                const id = cols[linkColIdx] || `Link #${idx}`;
+                const countryRaw = cols[countryColIdx] || "Unknown";
+                // Bersihkan kode negara (ambil 2 huruf pertama, uppercase)
+                const countryCode = countryRaw.toString().trim().substring(0,2).toUpperCase();
+                
                 const payout = parsePayout(cols[payoutIdx]);
-                if (!grouped[id]) grouped[id] = { id, count:0, totalPayoutUSD:0 };
+
+                if (!grouped[id]) {
+                    grouped[id] = { 
+                        id, 
+                        count: 0, 
+                        totalPayoutUSD: 0, 
+                        countries: {} 
+                    };
+                }
+
+                // Grouping Negara
+                if (!grouped[id].countries[countryCode]) {
+                    grouped[id].countries[countryCode] = { count: 0, totalUSD: 0 };
+                }
+                
                 grouped[id].count++;
                 grouped[id].totalPayoutUSD += payout;
+                grouped[id].countries[countryCode].count++;
+                grouped[id].countries[countryCode].totalUSD += payout;
             });
-            if (!Object.keys(grouped).length) throw new Error('Tidak ada data valid.');
-            rawDataArray = Object.values(grouped).sort((a,b) => b.totalPayoutUSD - a.totalPayoutUSD);
+
+            if (!Object.keys(grouped).length) throw new Error('Data tidak valid. Cek setting kolom.');
+
+            rawDataArray = Object.values(grouped);
             recalculateAll();
+
             document.getElementById('summarySection').classList.remove('hidden');
             document.getElementById('resultSection').classList.remove('hidden');
             document.getElementById('btnExport').disabled = false;
             document.getElementById('btnSave').disabled = false;
             errorMsg.style.display = 'none';
-            showToast('Data berhasil diproses!');
+            showToast('Data diproses dengan detail negara!');
+
         } catch (err) {
             errorMsg.style.display = 'block';
-            errorMsg.textContent = 'Gagal memproses data. ' + err.message;
+            errorMsg.textContent = err.message;
         }
     }
 
-    // ── HITUNG ULANG ─────────────────────────────────────────────────────
+    // ── RECALCULATE ────────────────────────────────────────────────────────────────
     function recalculateAll() {
         if (!rawDataArray.length) return;
         const rate = parseFloat(document.getElementById('usdRate').value) || 0;
         const adminPercent = parseFloat(document.getElementById('adminFee').value) || 0;
         let totalNet = 0, totalLeads = 0;
+
         processedData = rawDataArray.map(item => {
             const grossIDR = rate > 0 ? item.totalPayoutUSD * rate : item.totalPayoutUSD;
             const adminIDR = grossIDR * (adminPercent / 100);
             const finalNetIDR = grossIDR - adminIDR;
+            
             totalNet += finalNetIDR;
             totalLeads += item.count;
-            return {...item, grossIDR, adminIDR, finalNetIDR, adminPercent};
+
+            return {
+                ...item,
+                grossIDR, 
+                adminIDR, 
+                finalNetIDR, 
+                adminPercent
+            };
         });
+
         processedData.sort((a,b) => b.finalNetIDR - a.finalNetIDR);
         renderTable();
         updateSummary(totalNet, totalLeads, processedData.length);
     }
 
-    // ── RENDER TABEL ──────────────────────────────────────────────────────
+    // ── RENDER TABEL UTAMA ──────────────────────────────────────────────────────────
     function renderTable() {
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = '';
@@ -535,10 +701,9 @@
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${i+1}</td>
-                <td><span class="badge badge-group">${item.id}</span></td>
+                <td><span class="badge badge-group clickable-id" onclick="openCountryModal('${item.id}')">${item.id}</span></td>
                 <td style="text-align:center;">${item.count}</td>
                 <td class="text-right" style="color:var(--text-sub);">${fmt.usd(item.totalPayoutUSD)}</td>
-                <td class="text-right">${fmt.idr(item.grossIDR)}</td>
                 <td class="text-right" style="color:var(--danger);font-size:0.9rem;">${item.adminPercent}%</td>
                 <td class="text-right" style="font-weight:bold;color:var(--success);">${fmt.idr(item.finalNetIDR)}</td>`;
             tbody.appendChild(tr);
@@ -551,26 +716,71 @@
         document.getElementById('uniqueSmartlinks').textContent = types;
     }
 
-    // ── FILTER ────────────────────────────────────────────────────────────
     function filterTable() {
         const q = document.getElementById('searchBox').value.toLowerCase();
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = '';
-        processedData.filter(d => d.id.toString().includes(q)).forEach((item,i) => {
+        processedData.filter(d => d.id.toString().toLowerCase().includes(q)).forEach((item,i) => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${i+1}</td>
-                <td><span class="badge badge-group">${item.id}</span></td>
+                <td><span class="badge badge-group clickable-id" onclick="openCountryModal('${item.id}')">${item.id}</span></td>
                 <td style="text-align:center;">${item.count}</td>
                 <td class="text-right" style="color:var(--text-sub);">${fmt.usd(item.totalPayoutUSD)}</td>
-                <td class="text-right">${fmt.idr(item.grossIDR)}</td>
                 <td class="text-right" style="color:var(--danger);font-size:0.9rem;">${item.adminPercent}%</td>
                 <td class="text-right" style="font-weight:bold;color:var(--success);">${fmt.idr(item.finalNetIDR)}</td>`;
             tbody.appendChild(tr);
         });
     }
 
-    // ── CLEAR ────────────────────────────────────────────────────────────
+    // ── MODAL NEGARA ────────────────────────────────────────────────────────────────
+    function openCountryModal(id) {
+        const item = processedData.find(d => d.id === id);
+        if (!item) return;
+
+        document.getElementById('modalSmartlinkId').textContent = id;
+        const tbody = document.getElementById('modalTableBody');
+        tbody.innerHTML = '';
+
+        // Urutkan negara berdasarkan count tertinggi
+        const sortedCountries = Object.entries(item.countries).sort((a,b) => b[1].count - a[1].count);
+
+        sortedCountries.forEach(([code, data]) => {
+            const countryName = COUNTRY_MAP[code] || code;
+            const percentage = ((data.count / item.count) * 100).toFixed(1);
+            
+            // PERBAIKAN URL: Ganti ke UPPERCASE agar sesuai format US.svg / BR.svg
+            const flagUrl = `https://jennyhebya.github.io/country_flags/${code.toUpperCase()}.svg`;
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>
+                    <div class="country-cell">
+                        <img src="${flagUrl}" class="flag-img" alt="${code}" onerror="this.style.display='none'">
+                        <span>${countryName} <small style="color:var(--text-sub)">(${code})</small></span>
+                    </div>
+                </td>
+                <td style="text-align:center;">${data.count}</td>
+                <td style="text-align:right;">
+                    <div style="display:flex; align-items:center; justify-content:flex-end; gap:10px;">
+                        <span style="font-size:0.85rem; color:var(--text-sub);">${percentage}%</span>
+                        <span style="font-weight:bold; color:var(--primary);">${fmt.usd(data.totalUSD)}</span>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        document.getElementById('countryModal').classList.add('active');
+    }
+
+    function closeModal(e) {
+        // Jika dipanggil dengan event (klik background), cek target
+        if (e && e.target !== e.currentTarget) return;
+        document.getElementById('countryModal').classList.remove('active');
+    }
+
+    // ── UTILS ──────────────────────────────────────────────────────────────────────
     function clearData() {
         document.getElementById('rawData').value = '';
         document.getElementById('fileInput').value = '';
@@ -582,20 +792,26 @@
         rawDataArray = []; processedData = [];
     }
 
-    // ── EXPORT CSV ───────────────────────────────────────────────────────
     function exportToCSV() {
         if (!processedData.length) return;
-        let csv = 'data:text/csv;charset=utf-8,Smartlink ID,Jumlah Lead,Payout USD,Payout IDR (Gross),Admin (%),Payout IDR (Net)\n';
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "Smartlink ID,Total Lead,Total USD,Total IDR (Net),Top Country\n";
+        
         processedData.forEach(r => {
-            csv += `${r.id},${r.count},${r.totalPayoutUSD.toFixed(2)},"${Math.round(r.grossIDR).toLocaleString('id-ID')}","${r.adminPercent}%","${Math.round(r.finalNetIDR).toLocaleString('id-ID')}"\n`;
+            const topCountry = Object.entries(r.countries).sort((a,b) => b[1].count - a[1].count)[0];
+            const topCName = topCountry ? `${topCountry[0]} (${topCountry[1].count})` : '-';
+            csvContent += `"${r.id}",${r.count},${r.totalPayoutUSD.toFixed(2)},"${fmt.idr(r.finalNetIDR)}","${topCName}"\n`;
         });
-        const a = document.createElement('a');
-        a.href = encodeURI(csv);
-        a.download = 'hasil_analisis_smartlink.csv';
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "smartlink_summary_geo.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 
-    // ── TOAST ────────────────────────────────────────────────────────────
     function showToast(msg) {
         const t = document.getElementById('toast');
         t.textContent = msg; t.className = 'show';
