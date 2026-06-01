@@ -127,7 +127,8 @@
         .btn-cloud:hover { background: #7c3aed; }
         .btn-danger { background: white; border: 1px solid #fecaca; color: var(--danger); }
         .btn-danger:hover { background: #fef2f2; border-color: var(--danger); }
-        .btn-sm { padding: 8px 14px; font-size: 0.8rem; }
+        .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+        .btn-icon { padding: 6px; width: 32px; height: 32px; justify-content: center; border-radius: 6px; }
 
         .table-container { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); background: white; }
         table { width: 100%; border-collapse: collapse; font-size: 0.9rem; white-space: nowrap; }
@@ -193,6 +194,55 @@
         .bin-label { font-weight: 700; text-transform: uppercase; font-size: 0.7rem; color: var(--text-muted); }
         .bin-value { font-family: 'JetBrains Mono', monospace; font-weight: 600; }
 
+        /* --- BIN LOG PANEL (NEW) --- */
+        .bin-log-panel {
+            margin-top: 20px;
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .bin-log-header {
+            padding: 12px 16px;
+            background: #f8fafc;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .bin-log-header h5 { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+        .btn-clear-log { font-size: 0.75rem; padding: 4px 8px; color: var(--danger); background: transparent; border: 1px solid transparent; cursor: pointer; border-radius: 4px; }
+        .btn-clear-log:hover { background: #fef2f2; border-color: #fecaca; }
+
+        .bin-log-list {
+            max-height: 150px;
+            overflow-y: auto;
+            padding: 0;
+            margin: 0;
+            list-style: none;
+        }
+        .bin-log-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            transition: background 0.2s;
+        }
+        .bin-log-item:last-child { border-bottom: none; }
+        .bin-log-item:hover { background: #f9fafb; }
+        
+        .log-info { display: flex; flex-direction: column; gap: 2px; cursor: pointer; flex: 1; }
+        .log-name { font-size: 0.85rem; font-weight: 600; color: var(--text-main); }
+        .log-id { font-size: 0.75rem; color: var(--text-muted); font-family: monospace; }
+        
+        .log-actions { display: flex; gap: 8px; }
+        .btn-log-load { background: var(--primary-light); color: var(--primary); padding: 4px 10px; font-size: 0.75rem; border-radius: 6px; }
+        .btn-log-load:hover { background: var(--primary); color: white; }
+        
+        .btn-log-remove { color: #9ca3af; cursor: pointer; padding: 4px; border-radius: 4px; display: flex; align-items: center; }
+        .btn-log-remove:hover { color: var(--danger); background: #fef2f2; }
+
         @media (max-width: 768px) {
             .input-columns-grid { grid-template-columns: 1fr; }
             .nav-tabs { width: 100%; border-radius: 12px; overflow-x: auto; justify-content: flex-start; }
@@ -224,30 +274,38 @@
             </h3>
             <p style="font-size:0.9rem; color: var(--text-muted); margin-top:4px;">Simpan dan muat konfigurasi Anda secara aman dengan nama kustom.</p>
         </div>
-        <div style="display:flex; gap:15px; flex-wrap:wrap; align-items:flex-end;">
+        
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end; margin-bottom: 15px;">
             <!-- Nama Bin Input -->
-            <div style="flex:1; min-width:200px;">
+            <div>
                 <label for="binName">Nama Bin (Kustom)</label>
                 <input type="text" id="binName" placeholder="Contoh: Laporan_Mei_2024" oninput="clearCloudStatus()">
             </div>
             <!-- Master Key Input -->
-            <div style="flex:1; min-width:220px;">
+            <div>
                 <label for="binMasterKey">Master Key</label>
                 <input type="password" id="binMasterKey" placeholder="$2a$10$..." oninput="clearCloudStatus()">
             </div>
-            <!-- Buttons -->
-            <div style="display:flex; gap:10px;">
-                <button class="btn-secondary" onclick="loadFromCloud()" id="btnLoad">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                    Load Data
-                </button>
-                <button class="btn-cloud" onclick="saveToCloud()" id="btnSave">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
-                    Simpan Baru
-                </button>
-                <button class="btn-danger btn-sm" onclick="clearCloudData()">Reset</button>
+            <!-- Target Bin ID Load -->
+            <div>
+                <label for="loadBinId">Target Bin ID (Load)</label>
+                <input type="text" id="loadBinId" placeholder="Auto (Last) or Paste ID..." title="Kosongkan untuk load terakhir, atau paste ID lama">
             </div>
         </div>
+
+        <!-- Buttons -->
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="btn-secondary" onclick="loadFromCloud()" id="btnLoad">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                Load Data
+            </button>
+            <button class="btn-cloud" onclick="saveToCloud()" id="btnSave">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+                Simpan Baru
+            </button>
+            <button class="btn-danger btn-sm" onclick="clearCloudData()">Reset Current</button>
+        </div>
+        
         <div id="cloudStatus" class="cloud-status hidden"></div>
         
         <!-- Area Info Bin yang Aktif -->
@@ -260,6 +318,17 @@
                 <span class="bin-label">Active Bin ID:</span>
                 <span class="bin-value" id="binIdDisplay">-</span>
             </div>
+        </div>
+
+        <!-- --- BIN LOG PANEL (NEW) --- -->
+        <div class="bin-log-panel">
+            <div class="bin-log-header">
+                <h5>Riwayat Bin Tersimpan (Local)</h5>
+                <button class="btn-clear-log" onclick="clearBinLog()">Clear Log</button>
+            </div>
+            <ul class="bin-log-list" id="binLogList">
+                <li style="padding:16px; text-align:center; color:var(--text-muted); font-size:0.8rem;">Belum ada riwayat.</li>
+            </ul>
         </div>
     </section>
 
@@ -519,6 +588,65 @@
         idr: v => new Intl.NumberFormat('id-ID', {style:'currency',currency:'IDR',maximumFractionDigits:0}).format(v)
     };
 
+    // --- BIN LOG LOGIC ---
+    function getBinLog() {
+        return JSON.parse(localStorage.getItem('jb_bin_log') || '[]');
+    }
+    function addToBinLog(id, name) {
+        let logs = getBinLog();
+        // Remove duplicate if exists
+        logs = logs.filter(l => l.id !== id);
+        // Add to top
+        logs.unshift({ id, name: name || "Tanpa Nama", date: new Date().toLocaleDateString() });
+        // Limit to 10 items
+        if(logs.length > 10) logs.pop();
+        localStorage.setItem('jb_bin_log', JSON.stringify(logs));
+        renderBinLog();
+    }
+    function removeFromBinLog(id) {
+        let logs = getBinLog();
+        logs = logs.filter(l => l.id !== id);
+        localStorage.setItem('jb_bin_log', JSON.stringify(logs));
+        renderBinLog();
+    }
+    function clearBinLog() {
+        if(confirm('Hapus semua riwayat Bin?')) {
+            localStorage.removeItem('jb_bin_log');
+            renderBinLog();
+        }
+    }
+    function renderBinLog() {
+        const list = document.getElementById('binLogList');
+        const logs = getBinLog();
+        list.innerHTML = '';
+        if(logs.length === 0) {
+            list.innerHTML = '<li style="padding:16px; text-align:center; color:var(--text-muted); font-size:0.8rem;">Belum ada riwayat.</li>';
+            return;
+        }
+        logs.forEach(log => {
+            const li = document.createElement('li');
+            li.className = 'bin-log-item';
+            li.innerHTML = `
+                <div class="log-info" onclick="loadSpecificBin('${log.id}')">
+                    <span class="log-name">${log.name}</span>
+                    <span class="log-id">${log.id} • ${log.date}</span>
+                </div>
+                <div class="log-actions">
+                    <button class="btn-log-load" onclick="loadSpecificBin('${log.id}')">Load</button>
+                    <div class="btn-log-remove" onclick="removeFromBinLog('${log.id}')">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </div>
+                </div>
+            `;
+            list.appendChild(li);
+        });
+    }
+    function loadSpecificBin(id) {
+        document.getElementById('loadBinId').value = id;
+        loadFromCloud();
+    }
+    // --- END BIN LOG LOGIC ---
+
     window.addEventListener('load', () => {
         const savedKey = localStorage.getItem('jb_master_key');
         const savedBin = localStorage.getItem('jb_bin_id');
@@ -526,6 +654,8 @@
         if(savedKey) document.getElementById('binMasterKey').value = savedKey;
         if(savedBin) document.getElementById('binIdDisplay').textContent = savedBin;
         if(savedName) document.getElementById('binNameDisplay').textContent = savedName;
+        
+        renderBinLog(); // Render log on load
     });
 
     function switchTab(tabId) {
@@ -595,7 +725,6 @@
         if(!key) return showToast('Isi Master Key!');
         if(!processedData.length) return showToast('Tidak ada data untuk disimpan!');
         
-        // Gunakan nama kustom, jika kosong gunakan timestamp
         const binName = nameInput || `payment-excel-${new Date().toISOString().slice(0,10)}`;
         
         setStatus('loading', 'Menyimpan ke Cloud...');
@@ -603,7 +732,7 @@
         try {
             const payload = {
                 savedAt: new Date().toISOString(),
-                binName: binName, // Menyimpan nama kustom
+                binName: binName,
                 rate: parseFloat(document.getElementById('usdRate').value) || 0,
                 fee: parseFloat(document.getElementById('adminFee').value) || 0,
                 rows: processedData
@@ -613,7 +742,7 @@
                 headers: { 
                     'Content-Type': 'application/json', 
                     'X-Master-Key': key, 
-                    'X-Bin-Name': binName, // Header JSONBin juga diupdate
+                    'X-Bin-Name': binName, 
                     'X-Bin-Private': 'true' 
                 },
                 body: JSON.stringify(payload)
@@ -621,13 +750,15 @@
             const json = await res.json();
             if(!res.ok) throw new Error(json.message);
             
-            // Update UI
             document.getElementById('binIdDisplay').textContent = json.metadata.id;
             document.getElementById('binNameDisplay').textContent = binName;
             
             localStorage.setItem('jb_master_key', key);
             localStorage.setItem('jb_bin_id', json.metadata.id);
             localStorage.setItem('jb_bin_name', binName);
+            
+            // ADD TO LOG
+            addToBinLog(json.metadata.id, binName);
             
             setStatus('ok', 'Berhasil disimpan!');
             showToast('Data tersimpan di Cloud!');
@@ -637,8 +768,15 @@
 
     async function loadFromCloud() {
         const key = document.getElementById('binMasterKey').value.trim();
-        const binId = localStorage.getItem('jb_bin_id');
-        if(!key || !binId) return showToast('Isi Key & Bin ID dulu!');
+        let binId = document.getElementById('loadBinId').value.trim();
+        
+        if(!key) return showToast('Isi Master Key!');
+        
+        if(!binId) {
+            binId = localStorage.getItem('jb_bin_id');
+            if(!binId) return showToast('Tidak ada Bin ID yang tersimpan. Masukkan ID manual atau buat baru.');
+        }
+
         setStatus('loading', 'Memuat dari Cloud...');
         try {
             const res = await apiBin('GET', `/b/${binId}/latest`);
@@ -648,15 +786,17 @@
             document.getElementById('adminFee').value = data.fee || '';
             document.getElementById('binIdDisplay').textContent = binId;
             
-            // Tampilkan nama yang tersimpan, atau fallback ke 'Tanpa Nama'
             const loadedName = data.binName || "Tanpa Nama";
             document.getElementById('binNameDisplay').textContent = loadedName;
-            
-            // Update input nama di form agar user tahu sedang load apa
             document.getElementById('binName').value = (loadedName !== "Tanpa Nama") ? loadedName : "";
+            document.getElementById('loadBinId').value = ""; // Clear manual input after success
 
             localStorage.setItem('jb_master_key', key);
+            localStorage.setItem('jb_bin_id', binId);
             localStorage.setItem('jb_bin_name', loadedName);
+
+            // ADD TO LOG (If not already there, or move to top)
+            addToBinLog(binId, loadedName);
 
             processedData = data.rows || [];
             recalculateAll();
@@ -667,8 +807,8 @@
     }
 
     async function clearCloudData() {
-        const binId = localStorage.getItem('jb_bin_id');
-        if(!binId) return;
+        const binId = document.getElementById('binIdDisplay').textContent;
+        if(binId === '-' || !binId) return showToast('Tidak ada Bin aktif untuk di-reset.');
         if(!confirm('Hapus semua data di Cloud Bin ini?')) return;
         try {
             await apiBin('PUT', `/b/${binId}`, { savedAt:new Date().toISOString(), binName: document.getElementById('binNameDisplay').textContent, rows:[] });
@@ -678,6 +818,7 @@
             document.getElementById('segmentTableBody').innerHTML = '';
             document.getElementById('segmentTotal').textContent = fmt.idr(0);
             updateGlobalSummaryCards([], 0);
+            // Also remove from log? Optional. Keeping it is safer for accidental clears.
         } catch(e) { setStatus('err', e.message); }
     }
 
